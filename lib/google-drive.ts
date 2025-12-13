@@ -1,8 +1,9 @@
 import { google } from "googleapis";
+import pdf from "pdf-parse";
 
 export async function getGoogleDriveClient() {
   const credentialsJson = process.env.GOOGLE_CREDENTIALS;
-  
+
   if (!credentialsJson) {
     throw new Error("GOOGLE_CREDENTIALS environment variable is not set");
   }
@@ -51,6 +52,32 @@ export async function listPDFsInFolder(folderId: string) {
     } else {
       throw new Error(`Google Drive API error: ${error.message}`);
     }
+  }
+}
+
+export async function downloadAndExtractPDFText(fileId: string): Promise<string> {
+  try {
+    const drive = await getGoogleDriveClient();
+
+    // Download the PDF file as a buffer
+    const response = await drive.files.get(
+      {
+        fileId: fileId,
+        alt: 'media',
+      },
+      {
+        responseType: 'arraybuffer',
+      }
+    );
+
+    // Extract text from the PDF buffer
+    const buffer = Buffer.from(response.data as ArrayBuffer);
+    const data = await pdf(buffer);
+
+    return data.text;
+  } catch (error: any) {
+    console.error('Error downloading/extracting PDF:', error);
+    throw new Error(`Failed to extract text from PDF: ${error.message}`);
   }
 }
 

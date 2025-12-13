@@ -1,7 +1,9 @@
 "use server";
 
-import { listPDFsInFolder } from "@/lib/google-drive";
+import { listPDFsInFolder, downloadAndExtractPDFText } from "@/lib/google-drive";
 import { prisma } from "@/lib/prisma";
+import { extractTransactionsFromText } from "@/lib/openai";
+import { Prisma } from "@prisma/client";
 
 export async function syncGoogleDrive() {
   try {
@@ -64,33 +66,96 @@ export async function syncGoogleDrive() {
       };
     }
 
-    // Create statements for new PDFs
-    const statements = await Promise.all(
-      newPDFs.map((pdf) => {
+    // Create statements for new PDFs and process them
+    let totalTransactions = 0;
+    let totalFlagged = 0;
+    const errors: string[] = [];
+
+    for (const pdf of newPDFs) {
+      try {
         // Use modifiedTime as the statement date, fallback to createdTime, then current date
         const date = pdf.modifiedTime
           ? new Date(pdf.modifiedTime)
           : pdf.createdTime
           ? new Date(pdf.createdTime)
           : new Date();
-        
+
         // Store the webViewLink (preferred) or webContentLink as the URL
         const url = pdf.webViewLink || pdf.webContentLink || "";
 
-        return prisma.statement.create({
+        // Create the statement
+        const statement = await prisma.statement.create({
           data: {
             date,
             url,
             propertyId: property.id,
           },
         });
-      })
-    );
+
+        // Download PDF and extract text
+        if (pdf.id) {
+          try {
+            const rawText = await downloadAndExtractPDFText(pdf.id);
+
+            // Update statement with extracted text
+            await prisma.statement.update({
+              where: { id: statement.id },
+              data: { rawText },
+            });
+
+            // Extract transactions using OpenAI
+            const extractedTransactions = await extractTransactionsFromText(rawText);
+
+            if (extractedTransactions.length > 0) {
+              // Create transactions in database
+              const transactions = await Promise.all(
+                extractedTransactions.map((tx) => {
+                  const transactionDate = new Date(tx.date);
+
+                  return prisma.transaction.create({
+                    data: {
+                      date: transactionDate,
+                      amount: new Prisma.Decimal(tx.amount),
+                      category: tx.category,
+                      vendor: tx.vendor,
+                      isFlagged: tx.isFlagged,
+                      flagReason: tx.flagReason,
+                      statementId: statement.id,
+                    },
+                  });
+                })
+              );
+
+              totalTransactions += transactions.length;
+              totalFlagged += transactions.filter((t) => t.isFlagged).length;
+            }
+          } catch (error) {
+            console.error(`Error processing PDF ${pdf.name}:`, error);
+            errors.push(`${pdf.name}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+          }
+        }
+      } catch (error) {
+        console.error(`Error creating statement for ${pdf.name}:`, error);
+        errors.push(`${pdf.name}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      }
+    }
+
+    const successMessage = [
+      `Successfully synced ${newPDFs.length} new PDF(s)`,
+      totalTransactions > 0 ? `Extracted ${totalTransactions} transaction(s)` : null,
+      totalFlagged > 0 ? `(${totalFlagged} flagged for review)` : null,
+      errors.length > 0 ? `\nWarnings: ${errors.length} file(s) had errors` : null,
+    ]
+      .filter(Boolean)
+      .join('. ');
 
     return {
       success: true,
-      message: `Successfully synced ${statements.length} new PDF(s)`,
-      added: statements.length,
+      message: successMessage,
+      added: newPDFs.length,
+      transactionsExtracted: totalTransactions,
+      flaggedCount: totalFlagged,
+      errors: errors.length > 0 ? errors : undefined,
     };
   } catch (error) {
     console.error("Error syncing Google Drive:", error);
