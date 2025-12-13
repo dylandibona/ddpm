@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "prebuild": "node -e \"const c = JSON.parse(process.env.GOOGLE_CREDENTIALS || '{}'); console.log('Build-time service account:', c.client_email); console.log('Build-time folder ID:', process.env.GOOGLE_DRIVE_FOLDER_ID);\"",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
