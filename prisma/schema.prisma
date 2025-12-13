@@ -1,0 +1,49 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Property {
+  id        String      @id @default(cuid())
+  name      String
+  address   String
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  statements Statement[]
+}
+
+model Statement {
+  id          String       @id @default(cuid())
+  date        DateTime
+  url         String?
+  rawText     String?      @map("raw_text")
+  propertyId  String       @map("property_id")
+  property    Property     @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  transactions Transaction[]
+
+  @@map("statements")
+}
+
+model Transaction {
+  id          String    @id @default(cuid())
+  date        DateTime
+  amount      Decimal
+  category    String?
+  vendor      String?
+  isFlagged   Boolean   @default(false) @map("is_flagged")
+  flagReason  String?   @map("flag_reason")
+  statementId String    @map("statement_id")
+  statement   Statement @relation(fields: [statementId], references: [id], onDelete: Cascade)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@map("transactions")
+}

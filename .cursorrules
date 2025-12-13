@@ -1,0 +1,34 @@
+# Project: DDPM (Dylan DiBona Property Management)
+# Description: A rental property finance tracker and automated consultant.
+
+## User Persona
+- Owner of multiple rental properties.
+- Not a developer. Prioritize code stability, clear error messages, and simple instructions.
+
+## Tech Stack
+- Frontend: Next.js 14 (App Router), React, Lucide React (icons).
+- Styling: Tailwind CSS.
+- UI Library: Shadcn/UI (Use npx shadcn@latest add [component]).
+- Database: PostgreSQL (via Prisma ORM).
+- Authentication: Clerk (clerk.com).
+- AI: OpenAI API (gpt-4o) for document analysis.
+- Storage/Ingestion: Google Drive API (Service Account).
+
+## Design System
+- Vibe: Super clean, "CFO dashboard", black and white base.
+- Colors:
+  - Background: White (#ffffff) or extremely light gray (#f8fafc).
+  - Text: Slate 900 (#0f172a).
+  - Accents: Dark Blue (#1e3a8a) and Deep Purple (#581c87).
+- Typography: Inter or Geist Sans. Clean, readable, professional.
+
+## Core Features
+1. Dashboard: High-level metrics (Year to Date Income, Expenses, Net).
+2. Documents: List of files pulled from Google Drive.
+3. Analysis: AI extraction of data from PDFs (Date, Amount, Category, Vendor, Flagged Issues).
+4. Tax Prep: "Deduction Hunter" mode.
+
+## Rules
+- When generating code, always ensure it is compatible with Vercel deployment.
+- Use environment variables for all secrets (DATABASE_URL, OPENAI_API_KEY, GOOGLE_CREDENTIALS).
+- If a complex setup is required (like Google Cloud Console), provide a step-by-step checklist for the user.
