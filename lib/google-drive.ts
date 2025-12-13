@@ -24,14 +24,33 @@ export async function getGoogleDriveClient() {
 }
 
 export async function listPDFsInFolder(folderId: string) {
-  const drive = await getGoogleDriveClient();
+  try {
+    const drive = await getGoogleDriveClient();
 
-  const response = await drive.files.list({
-    q: `'${folderId}' in parents and mimeType='application/pdf' and trashed=false`,
-    fields: "files(id, name, createdTime, modifiedTime, webViewLink, webContentLink, size)",
-    orderBy: "modifiedTime desc",
-  });
+    const response = await drive.files.list({
+      q: `'${folderId}' in parents and mimeType='application/pdf' and trashed=false`,
+      fields: "files(id, name, createdTime, modifiedTime, webViewLink, webContentLink, size)",
+      orderBy: "modifiedTime desc",
+    });
 
-  return response.data.files || [];
+    return response.data.files || [];
+  } catch (error: any) {
+    console.error('Error listing PDFs from Google Drive:', error);
+    console.error('Folder ID:', folderId);
+    console.error('Error details:', {
+      message: error.message,
+      code: error.code,
+      errors: error.errors,
+    });
+
+    // Re-throw with more context
+    if (error.code === 404) {
+      throw new Error(`Google Drive folder not found (ID: ${folderId}). Make sure the folder is shared with the service account.`);
+    } else if (error.code === 403) {
+      throw new Error(`Permission denied to access Google Drive folder (ID: ${folderId}). Make sure the folder is shared with the service account.`);
+    } else {
+      throw new Error(`Google Drive API error: ${error.message}`);
+    }
+  }
 }
 
