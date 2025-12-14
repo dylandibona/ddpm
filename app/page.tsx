@@ -1,6 +1,5 @@
 import { getDashboardData } from "@/app/actions/get-dashboard-data";
-import { syncGoogleDrive } from "@/app/actions/sync-drive";
-import { RefreshCw } from "lucide-react";
+import { SyncStatus } from "@/components/sync-status";
 
 export default async function Home() {
   const result = await getDashboardData();
@@ -54,25 +53,7 @@ export default async function Home() {
           </div>
 
           {/* Area 2: Sync Status (Top Right, 1/3 width) */}
-          <div className="bg-card border border-border rounded-lg p-6 flex flex-col justify-between">
-            <div>
-              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
-                Sync Status
-              </p>
-              <p className="text-sm text-muted-foreground">
-                Last sync: Recent
-              </p>
-            </div>
-            <form action={syncGoogleDrive} className="mt-4">
-              <button
-                type="submit"
-                className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
-              >
-                <RefreshCw className="w-4 h-4" />
-                Sync Now
-              </button>
-            </form>
-          </div>
+          <SyncStatus />
 
           {/* Area 3: Property Ledger (Bottom, Full Width) */}
           <div className="lg:col-span-3 bg-card border border-border rounded-lg p-6">
