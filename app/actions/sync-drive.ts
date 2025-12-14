@@ -4,27 +4,23 @@ import { listPDFsInFolder, downloadAndExtractPDFText } from "@/lib/google-drive"
 import { prisma } from "@/lib/prisma";
 import { extractTransactionsFromText } from "@/lib/openai";
 import { Prisma } from "@prisma/client";
+import { revalidatePath } from "next/cache";
 
 export async function syncGoogleDrive() {
   try {
     const folderId = process.env.GOOGLE_DRIVE_FOLDER_ID;
 
     if (!folderId) {
-      return {
-        success: false,
-        error: "GOOGLE_DRIVE_FOLDER_ID environment variable is not set",
-      };
+      console.error("GOOGLE_DRIVE_FOLDER_ID environment variable is not set");
+      return;
     }
 
     // Get all PDFs from Google Drive folder
     const pdfs = await listPDFsInFolder(folderId);
 
     if (pdfs.length === 0) {
-      return {
-        success: true,
-        message: "No PDFs found in the specified folder",
-        added: 0,
-      };
+      console.log("No PDFs found in the specified folder");
+      return;
     }
 
     // Get all existing statements from database
@@ -47,11 +43,9 @@ export async function syncGoogleDrive() {
     });
 
     if (newPDFs.length === 0) {
-      return {
-        success: true,
-        message: "All PDFs are already synced",
-        added: 0,
-      };
+      console.log("All PDFs are already synced");
+      revalidatePath("/");
+      return;
     }
 
     // Get the first property (or you can modify this to select a specific property)
@@ -60,10 +54,8 @@ export async function syncGoogleDrive() {
 
     if (!property) {
       // If no property exists, we can't create statements
-      return {
-        success: false,
-        error: "No properties found. Please create a property first.",
-      };
+      console.error("No properties found. Please create a property first.");
+      return;
     }
 
     // Create statements for new PDFs and process them
@@ -140,30 +132,20 @@ export async function syncGoogleDrive() {
       }
     }
 
-    const successMessage = [
-      `Successfully synced ${newPDFs.length} new PDF(s)`,
-      totalTransactions > 0 ? `Extracted ${totalTransactions} transaction(s)` : null,
-      totalFlagged > 0 ? `(${totalFlagged} flagged for review)` : null,
-      errors.length > 0 ? `\nWarnings: ${errors.length} file(s) had errors` : null,
-    ]
-      .filter(Boolean)
-      .join('. ');
+    console.log(`Successfully synced ${newPDFs.length} new PDF(s)`);
+    if (totalTransactions > 0) {
+      console.log(`Extracted ${totalTransactions} transaction(s)`);
+    }
+    if (totalFlagged > 0) {
+      console.log(`${totalFlagged} flagged for review`);
+    }
+    if (errors.length > 0) {
+      console.warn(`Warnings: ${errors.length} file(s) had errors:`, errors);
+    }
 
-    return {
-      success: true,
-      message: successMessage,
-      added: newPDFs.length,
-      transactionsExtracted: totalTransactions,
-      flaggedCount: totalFlagged,
-      errors: errors.length > 0 ? errors : undefined,
-    };
+    revalidatePath("/");
   } catch (error) {
     console.error("Error syncing Google Drive:", error);
-    return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : "Unknown error occurred",
-    };
   }
 }
 
