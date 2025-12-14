@@ -11,8 +11,7 @@ export async function syncGoogleDrive() {
     const folderId = process.env.GOOGLE_DRIVE_FOLDER_ID;
 
     if (!folderId) {
-      console.error("GOOGLE_DRIVE_FOLDER_ID environment variable is not set");
-      return;
+      throw new Error("GOOGLE_DRIVE_FOLDER_ID environment variable is not set");
     }
 
     // Get all PDFs from Google Drive folder
@@ -54,8 +53,7 @@ export async function syncGoogleDrive() {
 
     if (!property) {
       // If no property exists, we can't create statements
-      console.error("No properties found. Please create a property first.");
-      return;
+      throw new Error("No properties found in database. Please seed the database first.");
     }
 
     // Create statements for new PDFs and process them
@@ -146,6 +144,7 @@ export async function syncGoogleDrive() {
     revalidatePath("/");
   } catch (error) {
     console.error("Error syncing Google Drive:", error);
+    throw error; // Rethrow so client can handle it
   }
 }
 
