@@ -1,5 +1,4 @@
 import { google } from "googleapis";
-import * as pdfParse from "pdf-parse";
 
 export async function getGoogleDriveClient() {
   const credentialsJson = process.env.GOOGLE_CREDENTIALS;
@@ -72,7 +71,10 @@ export async function downloadAndExtractPDFText(fileId: string): Promise<string>
 
     // Extract text from the PDF buffer
     const buffer = Buffer.from(response.data as ArrayBuffer);
-    const data = await (pdfParse as any).default(buffer);
+
+    // Dynamic import to avoid bundling pdf-parse at module evaluation time
+    const pdfParse = (await import('pdf-parse')).default;
+    const data = await pdfParse(buffer);
 
     return data.text;
   } catch (error: any) {
