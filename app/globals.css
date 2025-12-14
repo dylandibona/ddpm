@@ -4,42 +4,30 @@
 
 @layer base {
   :root {
-    /* Obsidian Theme - Pure Black */
-    --background: 0 0% 4%;              /* #0a0a0a - Obsidian Black */
-    --foreground: 0 0% 93%;             /* #ededed - Off-white */
+    /* Linear-Style Financial Terminal Theme */
+    --background: 222 84% 4.9%;           /* #09090b - Zinc 950 */
+    --foreground: 210 40% 98%;            /* Near white text */
 
-    --card: 0 0% 9%;                    /* #171717 - Dark Gray */
-    --card-foreground: 0 0% 93%;
+    --card: 220 13% 9.8%;                 /* #18181b - Zinc 900 */
+    --card-foreground: 210 40% 98%;
 
-    --popover: 0 0% 9%;
-    --popover-foreground: 0 0% 93%;
+    --border: 216 12% 16.1%;              /* #27272a - Zinc 800 */
+    --input: 216 12% 16.1%;
 
-    --primary: 239 84% 67%;             /* #6366f1 - Indigo-500 */
-    --primary-foreground: 0 0% 93%;
+    --primary: 239 84% 67%;               /* #6366f1 - Indigo 500 */
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 0 0% 15%;              /* #262626 - Subtle Gray */
-    --secondary-foreground: 0 0% 93%;
+    --muted: 220 13% 9.8%;
+    --muted-foreground: 240 5% 64.9%;
 
-    --muted: 0 0% 15%;
-    --muted-foreground: 0 0% 64%;       /* #a3a3a3 - Neutral-400 */
+    --accent: 239 84% 67%;
+    --accent-foreground: 0 0% 100%;
 
-    --accent: 239 84% 67%;              /* #6366f1 - Indigo-500 */
-    --accent-foreground: 0 0% 93%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
 
-    --destructive: 0 72% 51%;           /* Red */
-    --destructive-foreground: 0 0% 98%;
-
-    --border: 0 0% 15%;                 /* #262626 - Subtle */
-    --input: 0 0% 15%;
-    --ring: 239 84% 67%;                /* #6366f1 - Indigo-500 */
-
-    --radius: 0.75rem;
-
-    --chart-1: 239 84% 67%;             /* Indigo */
-    --chart-2: 142 71% 45%;             /* Emerald */
-    --chart-3: 262 83% 58%;             /* Purple */
-    --chart-4: 346 77% 50%;             /* Rose */
-    --chart-5: 43 74% 66%;              /* Amber */
+    --ring: 239 84% 67%;
+    --radius: 0.5rem;
   }
 }
 
@@ -47,7 +35,18 @@
   * {
     @apply border-border;
   }
+
   body {
-    @apply bg-background text-foreground antialiased;
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  /* Financial numbers use monospace */
+  .font-mono {
+    font-family: var(--font-geist-mono), ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  }
+
+  .font-sans {
+    font-family: var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   }
 }
