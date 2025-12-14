@@ -73,7 +73,7 @@ export async function downloadAndExtractPDFText(fileId: string): Promise<string>
     const buffer = Buffer.from(response.data as ArrayBuffer);
 
     // Dynamic import to avoid bundling pdf-parse at module evaluation time
-    const pdfParseModule = await import('pdf-parse');
+    const pdfParseModule = await import('pdf-parse') as any;
     const pdfParse = pdfParseModule.default || pdfParseModule;
     const data = await pdfParse(buffer);
 
